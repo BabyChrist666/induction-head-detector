@@ -1,5 +1,10 @@
 # Induction Head Detector
 
+[![Tests](https://github.com/BabyChrist666/induction-head-detector/actions/workflows/tests.yml/badge.svg)](https://github.com/BabyChrist666/induction-head-detector/actions/workflows/tests.yml)
+[![codecov](https://codecov.io/gh/BabyChrist666/induction-head-detector/branch/master/graph/badge.svg)](https://codecov.io/gh/BabyChrist666/induction-head-detector)
+[![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 Find and analyze induction heads in any transformer model.
 
 Induction heads implement a key copying mechanism: when they see `[A][B]...[A]`, they predict `[B]` by attending back to what followed the previous occurrence of `[A]`.
