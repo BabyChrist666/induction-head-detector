@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Induction Head Detector - Find Pattern Completion Circuits</title>
+    <style>
+        :root {
+            --bg-primary: #0d1117;
+            --bg-secondary: #161b22;
+            --bg-tertiary: #21262d;
+            --text-primary: #e6edf3;
+            --text-secondary: #8b949e;
+            --accent: #f78166;
+            --accent-green: #3fb950;
+            --accent-blue: #58a6ff;
+            --accent-purple: #a371f7;
+            --border: #30363d;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+
+        header {
+            background: linear-gradient(135deg, #1a1f2e 0%, #0d1117 100%);
+            border-bottom: 1px solid var(--border);
+            padding: 60px 0;
+        }
+
+        h1 { font-size: 2.8rem; margin-bottom: 15px; }
+        .subtitle { color: var(--text-secondary); font-size: 1.3rem; max-width: 600px; }
+
+        .badges { margin-top: 25px; display: flex; gap: 12px; flex-wrap: wrap; }
+        .badge {
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+        .badge-green { background: rgba(63, 185, 80, 0.2); color: var(--accent-green); }
+        .badge-orange { background: rgba(247, 129, 102, 0.2); color: var(--accent); }
+        .badge-blue { background: rgba(88, 166, 255, 0.2); color: var(--accent-blue); }
+
+        section { padding: 70px 0; }
+        h2 { font-size: 1.9rem; margin-bottom: 35px; color: var(--accent); }
+
+        .induction-demo {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .sequence-demo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin: 30px 0;
+            flex-wrap: wrap;
+        }
+
+        .token {
+            background: var(--bg-tertiary);
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            padding: 15px 20px;
+            font-family: monospace;
+            font-size: 1.2rem;
+            transition: all 0.3s;
+        }
+
+        .token-a { border-color: var(--accent-blue); color: var(--accent-blue); }
+        .token-b { border-color: var(--accent-green); color: var(--accent-green); }
+        .token-dots { border: none; color: var(--text-secondary); }
+        .token-predict {
+            border-color: var(--accent);
+            color: var(--accent);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        .arrow {
+            font-size: 2rem;
+            color: var(--accent);
+            margin: 0 10px;
+        }
+
+        .concept-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+        }
+
+        .concept-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 30px;
+            transition: transform 0.2s, border-color 0.2s;
+        }
+        .concept-card:hover {
+            transform: translateY(-3px);
+            border-color: var(--accent);
+        }
+        .concept-card h3 { color: var(--accent); margin-bottom: 15px; }
+        .concept-card p { color: var(--text-secondary); }
+
+        .code-block {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 25px;
+            overflow-x: auto;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.9rem;
+            margin: 25px 0;
+        }
+
+        .keyword { color: #ff7b72; }
+        .string { color: #a5d6ff; }
+        .function { color: #d2a8ff; }
+        .comment { color: #8b949e; }
+        .class { color: #7ee787; }
+        .number { color: #79c0ff; }
+
+        .metric-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 25px;
+        }
+
+        .metric-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 25px;
+        }
+
+        .metric-card h4 {
+            color: var(--accent-blue);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .metric-number {
+            background: var(--bg-tertiary);
+            color: var(--accent);
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-size: 0.85rem;
+        }
+
+        .attention-viz {
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+            padding: 20px;
+            font-family: monospace;
+            font-size: 0.85rem;
+            margin: 20px 0;
+            overflow-x: auto;
+        }
+
+        .stats {
+            display: flex;
+            gap: 50px;
+            justify-content: center;
+            margin: 50px 0;
+            flex-wrap: wrap;
+        }
+        .stat { text-align: center; }
+        .stat-value { font-size: 2.8rem; font-weight: bold; color: var(--accent); }
+        .stat-label { color: var(--text-secondary); margin-top: 5px; }
+
+        footer {
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border);
+            padding: 35px 0;
+            text-align: center;
+            color: var(--text-secondary);
+        }
+        footer a { color: var(--accent); text-decoration: none; }
+
+        .highlight {
+            background: linear-gradient(90deg, var(--accent) 0%, var(--accent-purple) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>Induction Head <span class="highlight">Detector</span></h1>
+            <p class="subtitle">Find and analyze induction heads in any transformer model - the circuit that enables in-context learning</p>
+            <div class="badges">
+                <span class="badge badge-green">56 Tests Passing</span>
+                <span class="badge badge-orange">Mechanistic Interpretability</span>
+                <span class="badge badge-blue">PyTorch 2.0+</span>
+            </div>
+        </div>
+    </header>
+
+    <section>
+        <div class="container">
+            <h2>What is an Induction Head?</h2>
+            <div class="induction-demo">
+                <p style="color: var(--text-secondary); margin-bottom: 20px;">
+                    Induction heads complete patterns by copying what followed previous occurrences
+                </p>
+                <div class="sequence-demo">
+                    <div class="token token-a">A</div>
+                    <div class="token token-b">B</div>
+                    <div class="token token-dots">...</div>
+                    <div class="token token-a">A</div>
+                    <span class="arrow">-></span>
+                    <div class="token token-predict">B?</div>
+                </div>
+                <p style="color: var(--text-secondary); margin-top: 20px;">
+                    When the model sees <strong>[A][B]...[A]</strong>, an induction head attends back to <strong>[B]</strong>
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <section style="background: var(--bg-secondary);">
+        <div class="container">
+            <h2>Detection Metrics</h2>
+            <div class="metric-cards">
+                <div class="metric-card">
+                    <h4><span class="metric-number">1</span> Induction Score</h4>
+                    <p>When tokens[i-1] matches tokens[j], measure attention from position i to j+1. High scores mean the head attends to "what came after the previous match."</p>
+                </div>
+                <div class="metric-card">
+                    <h4><span class="metric-number">2</span> Prefix Matching</h4>
+                    <p>Compare attention when prefixes match vs. don't match. Strong induction heads show higher attention when the surrounding context is similar.</p>
+                </div>
+                <div class="metric-card">
+                    <h4><span class="metric-number">3</span> Copying Score</h4>
+                    <p>Measure if attention leads to correct predictions. When max attention points to position j, does tokens[j+1] match what we're predicting?</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section>
+        <div class="container">
+            <h2>Quick Start</h2>
+            <div class="code-block">
+<code><span class="keyword">from</span> induction_head_detector <span class="keyword">import</span> (
+    <span class="class">InductionHeadDetector</span>,
+    detect_induction_heads,
+    create_analysis_report,
+)
+
+<span class="comment"># Quick detection</span>
+result = <span class="function">detect_induction_heads</span>(model, threshold=<span class="number">0.4</span>)
+<span class="function">print</span>(<span class="string">f"Found {result.num_heads_detected} induction heads"</span>)
+
+<span class="comment"># Detailed analysis</span>
+detector = <span class="class">InductionHeadDetector</span>(model, threshold=<span class="number">0.3</span>)
+result = detector.<span class="function">detect</span>(sequence_length=<span class="number">64</span>)
+
+<span class="keyword">for</span> score <span class="keyword">in</span> result.<span class="function">get_top_heads</span>(n=<span class="number">5</span>):
+    <span class="function">print</span>(<span class="string">f"L{score.layer}H{score.head}: {score.overall_score:.3f}"</span>)
+
+<span class="comment"># Generate report</span>
+report = <span class="function">create_analysis_report</span>(result, detailed=<span class="keyword">True</span>)
+<span class="function">print</span>(report)</code>
+            </div>
+        </div>
+    </section>
+
+    <section style="background: var(--bg-secondary);">
+        <div class="container">
+            <h2>Test Pattern Generation</h2>
+            <div class="concept-grid">
+                <div class="concept-card">
+                    <h3>Repeated Sequence</h3>
+                    <p><code>[A,B,C,D,A,B,C,D,A,B,C,D]</code></p>
+                    <p style="margin-top: 10px;">Classic pattern for detecting induction. Each repetition provides opportunities for pattern matching.</p>
+                </div>
+                <div class="concept-card">
+                    <h3>ABAB Pattern</h3>
+                    <p><code>[A,B,A,B,A,B,A,B]</code></p>
+                    <p style="margin-top: 10px;">Simple alternating pattern. Maximum induction signal with frequent repetitions.</p>
+                </div>
+                <div class="concept-card">
+                    <h3>Copy Task</h3>
+                    <p><code>[content][SEP][content]</code></p>
+                    <p style="margin-top: 10px;">Tests copying across a separator. Similar to in-context learning setups.</p>
+                </div>
+                <div class="concept-card">
+                    <h3>Prefix Matching</h3>
+                    <p><code>[...A,B,...,A,B,?]</code></p>
+                    <p style="margin-top: 10px;">Tests if the head uses multi-token context for matching, not just single tokens.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section>
+        <div class="container">
+            <h2>Sample Output</h2>
+            <div class="attention-viz">
+INDUCTION HEAD ANALYSIS REPORT
+==============================
+
+Model Info:
+  n_layers: 12
+
+Detection Summary:
+  Threshold: 0.40
+  Heads detected: 4
+
+Top Heads by Score:
+  L05H07: 0.823  [################----]
+  L06H03: 0.756  [###############-----]
+  L05H02: 0.698  [##############------]
+  L07H01: 0.612  [############--------]
+
+Score Distribution:
+  0.0-0.2: ########## (10)
+  0.2-0.4: ######## (8)
+  0.4-0.6: ## (2)
+  0.6-0.8: ## (2)
+  0.8-1.0: ## (2)
+            </div>
+        </div>
+    </section>
+
+    <section style="background: var(--bg-secondary);">
+        <div class="container">
+            <h2>Why It Matters</h2>
+            <div class="concept-grid">
+                <div class="concept-card">
+                    <h3>In-Context Learning</h3>
+                    <p>Induction heads are the primary mechanism for in-context learning in small to medium models. Understanding them is key to understanding few-shot capabilities.</p>
+                </div>
+                <div class="concept-card">
+                    <h3>Phase Transitions</h3>
+                    <p>Induction heads emerge suddenly during training - a phase transition. Finding them helps track model capability development.</p>
+                </div>
+                <div class="concept-card">
+                    <h3>Circuit Analysis</h3>
+                    <p>Induction heads are part of a two-head circuit: previous token heads compose with induction heads. This is a key example of attention composition.</p>
+                </div>
+                <div class="concept-card">
+                    <h3>Debugging</h3>
+                    <p>If a model fails at pattern completion or copying, checking for induction head development can help diagnose training issues.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section>
+        <div class="container">
+            <div class="stats">
+                <div class="stat">
+                    <div class="stat-value">56</div>
+                    <div class="stat-label">Tests Passing</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value">4</div>
+                    <div class="stat-label">Core Modules</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value">3</div>
+                    <div class="stat-label">Detection Metrics</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <p>Based on <a href="https://transformer-circuits.pub/2022/in-context-learning-and-induction-heads/index.html">In-context Learning and Induction Heads</a></p>
+            <p style="margin-top: 15px;">
+                <a href="https://github.com/BabyChrist666/induction-head-detector">View on GitHub</a>
+            </p>
+        </div>
+    </footer>
+</body>
+</html>
